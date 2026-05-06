@@ -1,0 +1,325 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -240,
+        -80
+      ],
+      "id": "5d05e212-801d-45cb-a787-0e4bbd201f84",
+      "name": "When chat message received",
+      "webhookId": "42225219-b964-4851-8515-63946cc643e9"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.chatInput }}"
+            },
+            {
+              "role": "system",
+              "content": "=You are an expert Text-to-Image Generation Prompt Engineer, working inside a non-automating AI.\nYour only task is to generate clear, vivid, and effective prompts to be passed into an image generation API.\nYou do not output any explanations, commentary, or formatting. Return only the prompt string to generate the image.\n\nConstraints:\n\nOutput a single-line, coherent prompt optimized for high-quality image generation.\n\nDo not include prompt metadata (e.g., aspect ratio, resolution, model name, seed).\n\nYou must not respond with markdown, code blocks, or labels — only the prompt text.\n\nDo not explain or summarize your reasoning. Output the final result only.\n\nPrompt Engineering Guidelines:\n\nTranslate vague descriptions into rich visual details.\n\nEnhance prompt with descriptors: lighting, mood, environment, composition, art style.\n\nUse cinematic or artistic keywords where relevant (e.g., digital art, studio lighting, depth of field).\n\nResolve ambiguities. Clarify unclear requests into visually distinct concepts.\nYour output should resemble this format:\n\n“A serene mountain lake at sunrise, surrounded by pine trees, mist rolling over the water, soft golden light, cinematic atmosphere, ultra-realistic style”\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "a5b48a03-307e-4735-91b2-f1c8669eb5c6",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EDdSSuB6RQwGKm0K",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4.5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "{\n    \"enable_base64_output\": false,\n    \"enable_sync_mode\": false,\n    \"prompt\": \"Nighttime outdoor photoshoot: A young man standsinside a public phone booth, holding a blue phonereceiver to his ear. One hand is casually tucked into his pocket, and he strikes a relaxed posture. He wears a white T-shirt with a pattern, loose brown pants, and jacket draped over his arm. The booths"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.output[0].content[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        -80
+      ],
+      "id": "05ca33c3-a6d2-450c-b4c4-a24883aa704f",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VwqcnudhhepZHoNT",
+          "name": "Wavespeed Credential Demo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "4c52ea9c-272c-4268-8765-a9986af796f3",
+      "name": "Wait",
+      "webhookId": "2744f437-80b8-4a47-8502-c757890df2b6"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.wavespeed.ai/api/v3/predictions/{{ $json.data.id }}/result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "304461ad-34e5-4be4-86b3-e0ed92090eea",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VwqcnudhhepZHoNT",
+          "name": "Wavespeed Credential Demo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6397485b-bc80-45f0-a7b5-9555cea564c0",
+              "leftValue": "={{ $json.data.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "5c7aa3c7-dc5a-41af-a02a-4e0e64ffc29e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "samuelokafor753@gmail.com",
+        "subject": "=Image Generated -  {{ $now }}",
+        "message": "={{ $json.data.outputs[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        -128
+      ],
+      "id": "56aea2b7-5cf9-44e2-a320-22aa4ca9889d",
+      "name": "Send a message",
+      "webhookId": "d780716e-64df-4ee4-ac07-4d772fea9930",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XBFLKJTKze5jiYAA",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        16
+      ],
+      "id": "7d63b520-7925-49ea-9c5c-3518c8e7a0c1",
+      "name": "Wait1",
+      "webhookId": "898dea61-cbeb-4c94-9a59-676735c85c60"
+    }
+  ],
+  "pinData": {
+    "HTTP Request": [
+      {
+        "json": {
+          "code": 200,
+          "message": "success",
+          "data": {
+            "id": "57103b258a3141248a3ca67f0cd78259",
+            "model": "bytedance/seedream-v4.5",
+            "outputs": [],
+            "urls": {
+              "get": "https://api.wavespeed.ai/api/v3/predictions/57103b258a3141248a3ca67f0cd78259/result"
+            },
+            "has_nsfw_contents": [],
+            "status": "created",
+            "created_at": "2026-05-01T05:49:21.801Z",
+            "code": 0,
+            "error": "",
+            "executionTime": 0,
+            "timings": {
+              "inference": 0
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d455c916-3d9a-4c7d-96ec-2342467941ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "772afde9aa84e3cd551fac198d9f9c3e38610e42023f67c5be24fe946cdb75ba"
+  },
+  "id": "f3J3b38PP6cPgf9D",
+  "tags": []
+}
